@@ -57,12 +57,36 @@ const topicsInfo = {
     modifications: {
         title: "DataFrame Modifications",
         desc: "Operations to manipulate data: sorting, renaming columns, dropping rows/columns, resetting index, transposing.",
-        code: `# Manipulating Data\ndf = df.sort_values(by='Score', ascending=False)\ndf = df.rename(columns={'Name': 'Student'})\ndf = df.drop(index=1) # Drop Bob\ndf = df.T # Transpose DataFrame`,
+        code: `# Manipulating Data\ndf = df.sort_values(by='Score', ascending=False)\ndf = df.rename(columns={'Name': 'Student'}) # Rename column\ndf.reindex([2, 0, 3]) # Reindex rows\ndf = df.drop(index=1) # Drop Bob\ndf = df.T # Transpose DataFrame\ndf['Grade'] = ['B', 'A', 'A', 'C'] # Add new column`,
         buttons: [
-            { label: "df.T (Transpose)", action: "transposeData", class: "primary" },
-            { label: "Sort by Score (Desc)", action: "sortScore", class: "primary" },
+            { label: "df['Grade'] = ... (Add Col)", action: "addColumn", class: "success" },
+            { label: "df.reindex([2, 0, 3])", action: "reindexData", class: "primary" },
             { label: "Rename 'Name' to 'Student'", action: "renameCol", class: "warning" },
+            { label: "df.T (Transpose)", action: "transposeData", class: "" },
+            { label: "Sort by Score (Desc)", action: "sortScore", class: "" },
             { label: "Drop Row 1 (Bob)", action: "dropRow", class: "danger" },
+            { label: "Reset DataFrame", action: "resetData", class: "" }
+        ]
+    },
+    selection: {
+        title: "Selection & Access",
+        desc: "Access specific rows, columns, or cells using bracket notation, loc (label-based), and iloc (index-based).",
+        code: `# Accessing Data\nnames = df['Name'] # Single column\nsubset = df[['Name', 'Score']] # Multiple columns\nrow = df.loc[0] # Row by label\nslice = df.iloc[0:2] # Rows 0 and 1 by integer location`,
+        buttons: [
+            { label: "df['Name'] (Column)", action: "selectColumn", class: "primary" },
+            { label: "df[['Name', 'Score']]", action: "selectMultiColumns", class: "" },
+            { label: "df.loc[0] (Label)", action: "showLoc", class: "" },
+            { label: "df.iloc[0:2] (Slice)", action: "showIloc", class: "" }
+        ]
+    },
+    filtering: {
+        title: "Filtering & Conditions",
+        desc: "Filter rows using boolean conditions or execute aggregate operations.",
+        code: `# Conditional Queries\nhigh_scores = df[df['Score'] >= 90]\n# Drop rows where Score < 90\ndf = df.drop(df[df['Score'] < 90].index)\n# Aggregation\nmean_score = df['Score'].mean()`,
+        buttons: [
+            { label: "df[df['Score'] >= 90]", action: "filterScore", class: "primary" },
+            { label: "Drop if Score < 90", action: "conditionalDrop", class: "danger" },
+            { label: "df['Score'].mean()", action: "showMean", class: "" },
             { label: "Reset DataFrame", action: "resetData", class: "" }
         ]
     },
@@ -424,6 +448,235 @@ const actionRegistry = {
             allCells.forEach(c => c.style.opacity = '1');
             consoleOutput.textContent = "=> Iteration complete.";
         }, currentData.columns.length * 1200 + 1000);
+    },
+
+    // --- Selection & Access ---
+    selectColumn: () => {
+        showConsole("df['Name']", "=> 0      Alice\n1        Bob\n2    Charlie\n3      David\nName: Name, dtype: object");
+        renderTable(); // ensure full table rendering
+        
+        setTimeout(() => {
+            const nameIdx = currentData.columns.indexOf('Name');
+            if(nameIdx === -1) return;
+            
+            const allCells = document.querySelectorAll('.df-cell');
+            allCells.forEach(c => c.style.opacity = '0.3'); // dim everything
+            
+            // Highlight the column header and its data
+            const colHeader = document.getElementById(`col-${nameIdx}`);
+            if(colHeader) {
+                colHeader.style.opacity = '1';
+                colHeader.classList.add('anim-highlight');
+            }
+            
+            const dataCells = document.querySelectorAll(`[id^="cell-"][id$="-${nameIdx}"]`);
+            dataCells.forEach(cell => {
+                cell.style.opacity = '1';
+                cell.classList.add('anim-highlight');
+            });
+        }, 50);
+    },
+
+    selectMultiColumns: () => {
+        showConsole("df[['Name', 'Score']]", "=>       Name  Score\n0    Alice     85\n1      Bob     90\n2  Charlie     95\n3    David     80");
+        renderTable(); // reset
+        
+        setTimeout(() => {
+            const allCells = document.querySelectorAll('.df-cell');
+            allCells.forEach(c => c.style.opacity = '0.3');
+            
+            ['Name', 'Score'].forEach(col => {
+                const idx = currentData.columns.indexOf(col);
+                if(idx === -1) return;
+                
+                const colHeader = document.getElementById(`col-${idx}`);
+                if(colHeader) {
+                    colHeader.style.opacity = '1';
+                    colHeader.classList.add('anim-highlight');
+                }
+                
+                const dataCells = document.querySelectorAll(`[id^="cell-"][id$="-${idx}"]`);
+                dataCells.forEach(cell => {
+                    cell.style.opacity = '1';
+                    cell.classList.add('anim-highlight');
+                });
+            });
+        }, 50);
+    },
+
+    showLoc: () => {
+        // Label based indexing
+        showConsole("df.loc[0]", "=> Name     Alice\nAge         25\nScore       85\nName: 0, dtype: object");
+        renderTable();
+        
+        setTimeout(() => {
+            const allCells = document.querySelectorAll('.df-cell');
+            allCells.forEach(c => c.style.opacity = '0.3');
+            
+            // Assuming index 0 exists
+            const idxIndex = currentData.index.indexOf(0);
+            if(idxIndex > -1) {
+                const rowCells = document.querySelectorAll(`[id^="idx-${currentData.index[idxIndex]}"], [id^="cell-${currentData.index[idxIndex]}-"]`);
+                rowCells.forEach(cell => {
+                    cell.style.opacity = '1';
+                    cell.classList.add('anim-highlight');
+                });
+            }
+        }, 50);
+    },
+
+    showIloc: () => {
+        // Integer-location based indexing
+        showConsole("df.iloc[0:2]", "=>       Name  Age  Score\n0    Alice   25     85\n1      Bob   30     90");
+        renderTable();
+        
+        setTimeout(() => {
+            const allCells = document.querySelectorAll('.df-cell');
+            allCells.forEach(c => c.style.opacity = '0.3');
+            
+            // Highlight first two rows if they exist
+            for(let i=0; i<Math.min(2, currentData.index.length); i++) {
+                const idxVal = currentData.index[i];
+                const rowCells = document.querySelectorAll(`[id^="idx-${idxVal}"], [id^="cell-${idxVal}-"]`);
+                rowCells.forEach(cell => {
+                    cell.style.opacity = '1';
+                    cell.classList.add('anim-highlight');
+                });
+            }
+        }, 50);
+    },
+
+    // --- Filtering & Conditions ---
+    filterScore: () => {
+        showConsole("df[df['Score'] >= 90]", "=>       Name  Age  Score\n1      Bob   30     90\n2  Charlie   35     95");
+        
+        const scoreIdx = currentData.columns.indexOf('Score');
+        if(scoreIdx === -1) return;
+        
+        const filteredData = {
+            columns: currentData.columns,
+            index: [],
+            data: []
+        };
+        
+        for(let i=0; i<currentData.data.length; i++) {
+            if(currentData.data[i][scoreIdx] >= 90) {
+                filteredData.data.push(currentData.data[i]);
+                filteredData.index.push(currentData.index[i]);
+            }
+        }
+        
+        tableContainer.innerHTML = '<div class="placeholder-text">Filtering Data...</div>';
+        setTimeout(() => renderTable(filteredData), 400);
+    },
+
+    conditionalDrop: () => {
+        showConsole("df.drop(df[df['Score'] < 90].index)", "=> Visual table updated (Dropped rows where Score < 90)");
+        
+        const scoreIdx = currentData.columns.indexOf('Score');
+        if(scoreIdx === -1) return;
+        
+        // Find indices to drop
+        const droppedIndices = [];
+        for(let i=0; i<currentData.data.length; i++) {
+            if(currentData.data[i][scoreIdx] < 90) {
+                // Collect internal iteration index
+                droppedIndices.push(i);
+                
+                // Animate them out before actually dropping
+                const rowCells = document.querySelectorAll(`[id^="idx-${currentData.index[i]}"], [id^="cell-${currentData.index[i]}-"]`);
+                rowCells.forEach(cell => {
+                    cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                });
+            }
+        }
+        
+        setTimeout(() => {
+            // Rebuild currentData keeping only non-dropped
+            const newData = [];
+            const newIndex = [];
+            for(let i=0; i<currentData.data.length; i++) {
+                if(!droppedIndices.includes(i)) {
+                    newData.push(currentData.data[i]);
+                    newIndex.push(currentData.index[i]);
+                }
+            }
+            currentData.data = newData;
+            currentData.index = newIndex;
+            
+            renderTable(currentData, false);
+        }, 600);
+    },
+
+    showMean: () => {
+        const scoreIdx = currentData.columns.indexOf('Score');
+        if(scoreIdx === -1) return;
+        
+        let sum = 0;
+        let count = 0;
+        for(let i=0; i<currentData.data.length; i++) {
+            const val = parseFloat(currentData.data[i][scoreIdx]);
+            if(!isNaN(val)) {
+                sum += val;
+                count++;
+            }
+        }
+        const mean = count > 0 ? (sum / count).toFixed(2) : 'NaN';
+        
+        showConsole("df['Score'].mean()", `=> ${mean}`);
+    },
+
+    // --- Enhanced Modifications ---
+    addColumn: () => {
+        showConsole("df['Grade'] = ['B', 'A', 'A', 'C']", "=> New column 'Grade' added.");
+        
+        if (currentData.columns.includes('Grade')) return; // Prevent arbitrary re-adding if present
+        
+        currentData.columns.push('Grade');
+        const grades = ['B', 'A', 'A', 'C'];
+        
+        // Match lengths just in case data was altered
+        for(let i=0; i<currentData.data.length; i++) {
+            currentData.data[i].push(grades[i] || 'N/A');
+        }
+        
+        renderTable(currentData, false);
+        
+        // Highlight the new column
+        setTimeout(() => {
+            const newColIdx = currentData.columns.length - 1;
+            const colHeader = document.getElementById(`col-${newColIdx}`);
+            if(colHeader) colHeader.classList.add('anim-highlight');
+            
+            const dataCells = document.querySelectorAll(`[id^="cell-"][id$="-${newColIdx}"]`);
+            dataCells.forEach(cell => {
+                cell.classList.add('anim-highlight');
+            });
+        }, 50);
+    },
+
+    reindexData: () => {
+        showConsole("df.reindex([2, 0, 3])", "=> Rows reordered. Missing indices produce NaN rows.");
+        
+        const newOrder = [2, 0, 3];
+        const newData = [];
+        
+        newOrder.forEach(idx => {
+            // Find if idx exists in currentData
+            const i = currentData.index.indexOf(idx);
+            if(i > -1) {
+                newData.push(currentData.data[i]);
+            } else {
+                // If it doesn't exist, fill with NaN
+                newData.push(Array(currentData.columns.length).fill('NaN'));
+            }
+        });
+        
+        currentData.index = newOrder;
+        currentData.data = newData;
+        
+        tableContainer.innerHTML = '<div class="placeholder-text">Reindexing Data...</div>';
+        setTimeout(() => renderTable(currentData, false), 400);
     }
 };
 
