@@ -56,11 +56,12 @@ const topicsInfo = {
     },
     modifications: {
         title: "DataFrame Modifications",
-        desc: "Operations to manipulate data: sorting, renaming columns, dropping rows/columns, resetting index, transposing.",
-        code: `# Manipulating Data\ndf = df.sort_values(by='Score', ascending=False)\ndf = df.rename(columns={'Name': 'Student'}) # Rename column\ndf.reindex([2, 0, 3]) # Reindex rows\ndf = df.drop(index=1) # Drop Bob\ndf = df.T # Transpose DataFrame\ndf['Grade'] = ['B', 'A', 'A', 'C'] # Add new column`,
+        code: `# Manipulating Data\ndf = df.sort_values(by='Score', ascending=False)\ndf = df.rename(columns={'Name': 'Student'}) # Rename column\ndf.reindex([2, 0, 3]) # Reindex rows\ndf = df.drop(index=1) # Drop Bob\ndf = df.T # Transpose DataFrame\ndf['Grade'] = ['B', 'A', 'A', 'C'] # Add new column\n# Missing Data\ndf = df.fillna(0) # Replace NaNs with 0\ndf = df.dropna() # Drop rows with NaNs`,
         buttons: [
             { label: "df['Grade'] = ... (Add Col)", action: "addColumn", class: "success" },
             { label: "df.reindex([2, 0, 3])", action: "reindexData", class: "primary" },
+            { label: "df.fillna(0)", action: "fillNaData", class: "warning" },
+            { label: "df.dropna()", action: "dropNaData", class: "danger" },
             { label: "Rename 'Name' to 'Student'", action: "renameCol", class: "warning" },
             { label: "df.T (Transpose)", action: "transposeData", class: "" },
             { label: "Sort by Score (Desc)", action: "sortScore", class: "" },
@@ -81,12 +82,20 @@ const topicsInfo = {
     },
     filtering: {
         title: "Filtering & Conditions",
-        desc: "Filter rows using boolean conditions or execute aggregate operations.",
-        code: `# Conditional Queries\nhigh_scores = df[df['Score'] >= 90]\n# Drop rows where Score < 90\ndf = df.drop(df[df['Score'] < 90].index)\n# Aggregation\nmean_score = df['Score'].mean()`,
+        desc: "Keep rows matching a condition (df[condition]) or drop rows based on a condition.",
+        code: `# 1. Keep only rows NOT equal to 90
+df = df[df['Score'] != 90]
+
+# 2. Remove rows where Score == 90
+df.drop(df[df['Score'] == 90].index)
+
+# 3. Drop column if ANY value in 'Score' < 90
+if (df['Score'] < 90).any(): 
+    df = df.drop(columns=['Score'])`,
         buttons: [
-            { label: "df[df['Score'] >= 90]", action: "filterScore", class: "primary" },
-            { label: "Drop if Score < 90", action: "conditionalDrop", class: "danger" },
-            { label: "df['Score'].mean()", action: "showMean", class: "" },
+            { label: "Keep if Score != 90", action: "keepScoreNot90", class: "primary" },
+            { label: "Drop if Score == 90", action: "dropScoreEq90", class: "danger" },
+            { label: "Drop Col if Any Score < 90", action: "dropColIfAny", class: "warning" },
             { label: "Reset DataFrame", action: "resetData", class: "" }
         ]
     },
@@ -547,8 +556,8 @@ const actionRegistry = {
     },
 
     // --- Filtering & Conditions ---
-    filterScore: () => {
-        showConsole("df[df['Score'] >= 90]", "=>       Name  Age  Score\n1      Bob   30     90\n2  Charlie   35     95");
+    keepScoreNot90: () => {
+        showConsole("df = df[df['Score'] != 90]", "=> Filtering table to KEEP rows where Score is NOT 90.");
         
         const scoreIdx = currentData.columns.indexOf('Score');
         if(scoreIdx === -1) return;
@@ -560,7 +569,7 @@ const actionRegistry = {
         };
         
         for(let i=0; i<currentData.data.length; i++) {
-            if(currentData.data[i][scoreIdx] >= 90) {
+            if(currentData.data[i][scoreIdx] != 90) {
                 filteredData.data.push(currentData.data[i]);
                 filteredData.index.push(currentData.index[i]);
             }
@@ -570,20 +579,17 @@ const actionRegistry = {
         setTimeout(() => renderTable(filteredData), 400);
     },
 
-    conditionalDrop: () => {
-        showConsole("df.drop(df[df['Score'] < 90].index)", "=> Visual table updated (Dropped rows where Score < 90)");
+    dropScoreEq90: () => {
+        showConsole("df.drop(df[df['Score'] == 90].index)", "=> Visual table updated (Dropped rows where Score == 90)");
         
         const scoreIdx = currentData.columns.indexOf('Score');
         if(scoreIdx === -1) return;
         
-        // Find indices to drop
         const droppedIndices = [];
         for(let i=0; i<currentData.data.length; i++) {
-            if(currentData.data[i][scoreIdx] < 90) {
-                // Collect internal iteration index
+            if(currentData.data[i][scoreIdx] == 90) {
                 droppedIndices.push(i);
                 
-                // Animate them out before actually dropping
                 const rowCells = document.querySelectorAll(`[id^="idx-${currentData.index[i]}"], [id^="cell-${currentData.index[i]}-"]`);
                 rowCells.forEach(cell => {
                     cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
@@ -592,7 +598,6 @@ const actionRegistry = {
         }
         
         setTimeout(() => {
-            // Rebuild currentData keeping only non-dropped
             const newData = [];
             const newIndex = [];
             for(let i=0; i<currentData.data.length; i++) {
@@ -608,25 +613,97 @@ const actionRegistry = {
         }, 600);
     },
 
-    showMean: () => {
+    dropColIfAny: () => {
+        showConsole("if (df['Score'] < 90).any():\n    df = df.drop(columns=['Score'])", "=> Checking if any Score < 90... True. Dropping Score column.");
+        
         const scoreIdx = currentData.columns.indexOf('Score');
         if(scoreIdx === -1) return;
-        
-        let sum = 0;
-        let count = 0;
+
+        let anyUnder90 = false;
         for(let i=0; i<currentData.data.length; i++) {
-            const val = parseFloat(currentData.data[i][scoreIdx]);
-            if(!isNaN(val)) {
-                sum += val;
-                count++;
+            if(currentData.data[i][scoreIdx] < 90) {
+                 anyUnder90 = true;
+                 break;
             }
         }
-        const mean = count > 0 ? (sum / count).toFixed(2) : 'NaN';
-        
-        showConsole("df['Score'].mean()", `=> ${mean}`);
+
+        if (anyUnder90) {
+             const colCells = document.querySelectorAll(`[id^="col-${scoreIdx}"], [id^="cell-"][id$="-${scoreIdx}"]`);
+             colCells.forEach(cell => {
+                 cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+             });
+
+             setTimeout(() => {
+                 currentData.columns.splice(scoreIdx, 1);
+                 for(let i=0; i<currentData.data.length; i++) {
+                     currentData.data[i].splice(scoreIdx, 1);
+                 }
+                 renderTable(currentData, false);
+             }, 600);
+        }
     },
 
     // --- Enhanced Modifications ---
+    fillNaData: () => {
+        showConsole("df = df.fillna(0)", "=> Replacing all NaN values with 0");
+        let hasNan = false;
+        
+        for(let r=0; r<currentData.data.length; r++) {
+            for(let c=0; c<currentData.columns.length; c++) {
+                if(currentData.data[r][c] === 'NaN' || Number.isNaN(currentData.data[r][c])) {
+                    currentData.data[r][c] = 0;
+                    hasNan = true;
+                }
+            }
+        }
+
+        renderTable(currentData, false);
+        if(hasNan) {
+            // Pulse table to show update
+            const df = document.querySelector('.dataframe');
+            if(df) {
+                df.style.boxShadow = '0 0 15px rgba(255,165,0,0.5)';
+                setTimeout(() => df.style.boxShadow = '', 1000);
+            }
+        } else {
+            consoleOutput.textContent += "\n(No NaN values found in the data)";
+        }
+    },
+
+    dropNaData: () => {
+        showConsole("df = df.dropna()", "=> Dropping all rows containing NaN values");
+        let hasNanRows = false;
+        const rowsToKeep = [];
+        const indexToKeep = [];
+
+        for(let r=0; r<currentData.data.length; r++) {
+            let rowHasNan = false;
+            for(let c=0; c<currentData.columns.length; c++) {
+                if(currentData.data[r][c] === 'NaN' || Number.isNaN(currentData.data[r][c])) {
+                    rowHasNan = true;
+                    break;
+                }
+            }
+            if(!rowHasNan) {
+                rowsToKeep.push(currentData.data[r]);
+                indexToKeep.push(currentData.index[r]);
+            } else {
+                hasNanRows = true;
+            }
+        }
+
+        currentData.data = rowsToKeep;
+        currentData.index = indexToKeep;
+        
+        tableContainer.innerHTML = '<div class="placeholder-text">Dropping NaNs...</div>';
+        setTimeout(() => {
+            renderTable(currentData, false);
+            if(!hasNanRows) {
+               consoleOutput.textContent += "\n(No NaN values found, no rows dropped)";
+            }
+        }, 400);
+    },
+
     addColumn: () => {
         showConsole("df['Grade'] = ['B', 'A', 'A', 'C']", "=> New column 'Grade' added.");
         

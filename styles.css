@@ -231,6 +231,7 @@ body {
     padding: 1rem;
     border-radius: 1rem;
     font-family: 'JetBrains Mono', monospace;
+    font-variant-ligatures: none;
     font-size: 0.85rem;
     line-height: 1.5;
     margin-bottom: 1.5rem;
@@ -310,6 +311,7 @@ body {
     border-radius: 0.5rem;
     margin-bottom: 1.5rem;
     font-family: 'JetBrains Mono', monospace;
+    font-variant-ligatures: none;
     font-size: 0.85rem;
     color: #e2e8f0;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
@@ -378,12 +380,14 @@ body {
     color: var(--accent-warning); /* Yellowish syntax */
     border-right: 2px solid var(--accent-warning);
     animation: blinkCursor 1s step-end infinite;
+    font-variant-ligatures: none;
 }
 
 .output-line {
     color: #94a3b8;
     padding-left: 2rem; /* Indent under prompt */
     white-space: pre-wrap;
+    font-variant-ligatures: none;
 }
 
 @keyframes blinkCursor {
@@ -424,6 +428,7 @@ body {
     padding: 0.75rem 1.25rem;
     text-align: center;
     font-family: 'JetBrains Mono', monospace;
+    font-variant-ligatures: none;
     font-size: 0.9rem;
     display: flex;
     align-items: center;
