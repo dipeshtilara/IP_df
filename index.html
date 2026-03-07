@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pandas DataFrame Visualizer</title>
+    <meta name="description" content="Interactive learning platform for Pandas DataFrame concepts covering basics, attributes, modifications, CSV data transfer and iterations.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass-panel">
+            <div class="logo">
+                <div class="logo-icon">🐼</div>
+                <h1>Pandas<span>Vis</span></h1>
+            </div>
+            <nav class="nav-menu">
+                <button class="nav-item active" data-topic="basics">
+                    <span class="icon">📊</span> Basics & Creation
+                </button>
+                <button class="nav-item" data-topic="attributes">
+                    <span class="icon">🏷️</span> Attributes & Ops
+                </button>
+                <button class="nav-item" data-topic="modifications">
+                    <span class="icon">🛠️</span> Modifications
+                </button>
+                <button class="nav-item" data-topic="transfer">
+                    <span class="icon">📁</span> CSV Transfer
+                </button>
+                <button class="nav-item" data-topic="iteration">
+                    <span class="icon">🔄</span> Iteration
+                </button>
+            </nav>
+            <div class="theme-toggle-container">
+                <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark Mode">
+                    <span class="sun-icon">☀️</span>
+                    <span class="moon-icon">🌙</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <header class="top-bar glass-panel">
+                <h2 id="topic-title">DataFrame Basics</h2>
+                <p id="topic-description">Understand exactly how a Pandas DataFrame is structured like a 2D table.</p>
+            </header>
+
+            <div class="workspace">
+                <!-- Code / Controls Panel -->
+                <div class="controls-panel glass-panel">
+                    <div class="panel-header">
+                        <h3>Interactive Console</h3>
+                    </div>
+                    <div class="code-display" id="code-snippet">
+                        <code>import pandas as pd<br><br>df = pd.DataFrame({<br>&nbsp;&nbsp;"Name": ["Alice", "Bob", "Charlie", "David"],<br>&nbsp;&nbsp;"Age": [25, 30, 35, 40],<br>&nbsp;&nbsp;"Score": [85, 90, 95, 80]<br>})</code>
+                    </div>
+                    <div class="action-buttons" id="action-buttons">
+                        <!-- Buttons injected dynamically by JS -->
+                        <button class="action-btn primary" onclick="renderTable()">Show DataFrame</button>
+                    </div>
+                </div>
+
+                <!-- Visualization Stage -->
+                <div class="visualization-stage glass-panel">
+                    <div class="stage-header">
+                        <h3>Output Visualization</h3>
+                        <div class="status-indicator"></div>
+                    </div>
+                    
+                    <!-- Live Syntax and Output Console -->
+                    <div class="action-console" id="action-console">
+                        <div class="console-header">
+                            <div class="console-dots">
+                                <span></span><span></span><span></span>
+                            </div>
+                            <div class="console-title">Python Terminal</div>
+                        </div>
+                        <div class="console-body">
+                            <div class="syntax-line"><span class="prompt">>>></span> <span id="console-syntax" class="typing-text"></span></div>
+                            <div class="output-line" id="console-output"></div>
+                        </div>
+                    </div>
+
+                    <div class="table-container" id="table-container">
+                        <!-- DataFrame Table will be rendered here -->
+                        <div class="placeholder-text">Click an action to visualize the DataFrame.</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
