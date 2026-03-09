@@ -742,7 +742,7 @@ body {
 }
 .axis-toggle input:checked + .slider {
     background-color: var(--accent-primary);
-    border-color: var(--accent-primary);
+    border-color: var(--accent-primary); 
 }
 .axis-toggle input:checked + .slider:before {
     transform: translateX(16px);
