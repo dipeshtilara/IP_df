@@ -32,11 +32,15 @@ const topicsInfo = {
     basics: {
         title: "DataFrame Basics & Creation",
         desc: "A DataFrame is a 2-dimensional labeled data structure with columns of potentially different types.",
-        code: `import pandas as pd\n\ndata = {\n  "Name": ["Alice", "Bob", "Charlie", "David"],\n  "Age": [25, 30, 35, 40],\n  "Score": [85, 90, 95, 80]\n}\ndf = pd.DataFrame(data)`,
+        code: `# 1. Dictionary of Lists (Default)\ndf = pd.DataFrame({'Name': ['Alice', 'Bob'], 'Age': [25, 30]})\n\n# 2. List of Lists\ndf = pd.DataFrame([['Alice', 25], ['Bob', 30]], columns=['Name', 'Age'])\n\n# 3. List of Dictionaries\ndf = pd.DataFrame([{'Name': 'Alice', 'Age': 25}, {'Name': 'Bob', 'Age': 30}])\n\n# 4. Dictionary of Dictionaries\ndf = pd.DataFrame({'Row1': {'Name': 'A', 'Age': 1}, 'Row2': {'Name': 'B', 'Age': 2}}).T`,
         buttons: [
-            { label: "Create DataFrame", action: "renderTable", class: "primary" },
+            { label: "Create: Dict of Lists", action: "createDictOfLists", class: "primary" },
+            { label: "Create: List of Lists", action: "createListOfLists", class: "primary" },
+            { label: "Create: List of Dicts", action: "createListOfDicts", class: "primary" },
+            { label: "Create: Dict of Dicts", action: "createDictOfDicts", class: "primary" },
             { label: "df.head(2)", action: "showHead", class: "" },
-            { label: "df.tail(1)", action: "showTail", class: "" }
+            { label: "df.tail(1)", action: "showTail", class: "" },
+            { label: "Reset Default", action: "resetData", class: "warning" }
         ]
     },
     attributes: {
@@ -126,8 +130,14 @@ function setTopic(topic) {
     topicTitle.textContent = info.title;
     topicDoc.textContent = info.desc;
     
-        // Format code block
-    codeSnippet.innerHTML = `<code>${info.code.replace(/\\n/g, '<br>').replace(/ /g, '&nbsp;')}</code>`;
+    // Format code block
+    if (info.syntaxHTML) {
+        codeSnippet.innerHTML = info.syntaxHTML;
+        codeSnippet.classList.add('has-rich-syntax');
+    } else {
+        codeSnippet.innerHTML = `<code>${info.code.replace(/\\n/g, '<br>').replace(/ /g, '&nbsp;')}</code>`;
+        codeSnippet.classList.remove('has-rich-syntax');
+    }
     
     // Render Buttons
     actionButtons.innerHTML = '';
@@ -199,15 +209,28 @@ function resetData() {
     renderTable();
 }
 
-function showConsole(syntax, output) {
+function showConsole(syntax, output, richHTML = null) {
     if(!actionConsole) return;
     actionConsole.classList.remove('visible');
     
     // trigger reflow to reset animation
     void actionConsole.offsetWidth;
     
+    // Always update the python terminal text
     consoleSyntax.textContent = syntax || '';
     consoleOutput.textContent = output || '';
+
+    // Handle Rich Syntax Overlay below the terminal
+    const richSyntaxOutput = document.getElementById('rich-syntax-output');
+    if (richSyntaxOutput) {
+        if (richHTML) {
+            richSyntaxOutput.innerHTML = richHTML;
+            richSyntaxOutput.style.display = 'block';
+        } else {
+            richSyntaxOutput.style.display = 'none';
+            richSyntaxOutput.innerHTML = '';
+        }
+    }
     
     // Show the console
     actionConsole.classList.add('visible');
@@ -220,6 +243,46 @@ function showConsole(syntax, output) {
 const actionRegistry = {
     renderTable: () => {
         showConsole("df = pd.DataFrame(data)", "=> DataFrame successfully created in memory.");
+        renderTable();
+    },
+
+    createDictOfLists: () => {
+        currentData = {
+            columns: ['Name', 'Age'],
+            index: [0, 1],
+            data: [['Alice', 25], ['Bob', 30]]
+        };
+        showConsole("df = pd.DataFrame({'Name': ['Alice', 'Bob'], 'Age': [25, 30]})", "=> DataFrame created from Dictionary of Lists");
+        renderTable();
+    },
+
+    createListOfLists: () => {
+        currentData = {
+            columns: ['Name', 'Age'],
+            index: [0, 1],
+            data: [['Alice', 25], ['Bob', 30]]
+        };
+        showConsole("df = pd.DataFrame([['Alice', 25], ['Bob', 30]], columns=['Name', 'Age'])", "=> DataFrame created from List of Lists");
+        renderTable();
+    },
+
+    createListOfDicts: () => {
+        currentData = {
+            columns: ['Name', 'Age'],
+            index: [0, 1],
+            data: [['Alice', 25], ['Bob', 30]]
+        };
+        showConsole("df = pd.DataFrame([{'Name': 'Alice', 'Age': 25}, {'Name': 'Bob', 'Age': 30}])", "=> DataFrame created from List of Dictionaries");
+        renderTable();
+    },
+
+    createDictOfDicts: () => {
+        currentData = {
+            columns: ['Name', 'Age'],
+            index: ['Row1', 'Row2'],
+            data: [['A', 1], ['B', 2]]
+        };
+        showConsole("df = pd.DataFrame({'Row1': {'Name': 'A', 'Age': 1}, 'Row2': {'Name': 'B', 'Age': 2}}).T", "=> DataFrame created from transposed Dictionary of Dictionaries");
         renderTable();
     },
 
@@ -255,23 +318,120 @@ const actionRegistry = {
     showSize: () => {
         const totalElements = currentData.index.length * currentData.columns.length;
         showConsole("df.size", `=> ${totalElements}    # Total number of elements in DataFrame`);
+        renderTable(); 
+        setTimeout(() => {
+            const cells = document.querySelectorAll('.df-cell');
+            cells.forEach((c, idx) => {
+                c.classList.remove('anim-highlight');
+                void c.offsetWidth;
+                c.style.animationDelay = `${idx * 30}ms`; // cascade effect
+                c.classList.add('anim-highlight');
+            });
+            // Cleanup delay
+            setTimeout(() => {
+                cells.forEach(c => c.style.animationDelay = '0ms');
+            }, cells.length * 30 + 1000);
+        }, 50);
     },
 
     showNdim: () => {
         showConsole("df.ndim", "=> 2    # DataFrame is a 2D data structure");
+        renderTable();
+        setTimeout(() => {
+            const headers = document.querySelectorAll('.df-header');
+            const indices = document.querySelectorAll('.df-index');
+            
+            headers.forEach(h => {
+                h.classList.remove('anim-highlight');
+                void h.offsetWidth;
+                h.style.animation = 'renameHighlight 1s ease'; // repurpose animation manually
+            });
+            
+            setTimeout(() => {
+                indices.forEach(i => {
+                    i.classList.remove('anim-highlight');
+                    void i.offsetWidth;
+                    i.style.animation = 'renameHighlight 1s ease';
+                });
+            }, 600); // offset the second dimension slightly
+        }, 50);
     },
     
     showEmpty: () => {
         const isEmpty = currentData.data.length === 0;
         showConsole("df.empty", `=> ${isEmpty ? 'True' : 'False'}`);
+        renderTable();
+        setTimeout(() => {
+            const table = document.querySelector('.dataframe');
+            if (table) {
+                table.style.animation = 'none';
+                void table.offsetWidth;
+                table.style.animation = 'shake 0.5s cubic-bezier(.36,.07,.19,.97) both';
+            }
+        }, 50);
     },
 
     showDtypes: () => {
         showConsole("df.dtypes", "Name      object\nAge        int64\nScore      int64\ndtype: object");
+        renderTable();
+        setTimeout(() => {
+            const headers = document.querySelectorAll('.df-header');
+            headers.forEach((h, i) => {
+                // Ignore the empty index corner
+                if(h.textContent.trim() === '') return;
+                
+                h.style.position = 'relative';
+                const dtypeLabel = document.createElement('div');
+                dtypeLabel.className = 'dtype-tooltip';
+                
+                // Very basic guess based on first row
+                let dtype = 'object';
+                if(currentData.data.length > 0) {
+                    const val = currentData.data[0][i-1]; // offset by 1 because of index column
+                    if(typeof val === 'number') dtype = 'int64';
+                }
+                
+                dtypeLabel.textContent = dtype;
+                h.appendChild(dtypeLabel);
+                
+                h.classList.remove('anim-highlight');
+                void h.offsetWidth;
+                h.classList.add('anim-highlight');
+                
+                setTimeout(() => {
+                    if (h.contains(dtypeLabel)) h.removeChild(dtypeLabel);
+                }, 2000); // clear tooltip after 2 seconds
+            });
+        }, 50);
     },
 
     showHasNan: () => {
         showConsole("df.isna().any()", "Name     False\nAge      False\nScore    False\ndtype: bool");
+        renderTable();
+        setTimeout(() => {
+            let hasNan = false;
+            const cells = document.querySelectorAll('.df-cell');
+            cells.forEach(c => {
+                if (c.textContent === 'NaN' || c.textContent === '') {
+                    hasNan = true;
+                    c.style.animation = 'none';
+                    void c.offsetWidth;
+                    c.style.animation = 'highlightPulse 1.5s infinite'; // pulsing constantly for a bit
+                    setTimeout(() => { c.style.animation = ''; }, 3000);
+                }
+            });
+            
+            if (!hasNan) {
+                // Quick flash green to show everything is valid
+                const table = document.querySelector('.dataframe');
+                if (table) {
+                    table.style.boxShadow = '0 0 30px var(--accent-success)';
+                    setTimeout(() => {
+                        table.style.boxShadow = '0 10px 30px rgba(0,0,0,0.2)';
+                    }, 1000);
+                }
+            }
+        }, 50);
     },
 
     pulseColumns: () => {
@@ -358,18 +518,25 @@ const actionRegistry = {
         // Find Bob (index 1)
         const idxIndex = currentData.index.indexOf(1);
         if(idxIndex > -1) {
-            // Animate out
+            // Ghosting phase
             const rowCells = document.querySelectorAll(`[id^="idx-1"], [id^="cell-1-"]`);
             rowCells.forEach(cell => {
-                cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                cell.classList.add('ghosted-element');
             });
             
-            // Remove from data source after animation
             setTimeout(() => {
-                currentData.data.splice(idxIndex, 1);
-                currentData.index.splice(idxIndex, 1);
-                renderTable(currentData, false);
-            }, 600);
+                // Animate out
+                rowCells.forEach(cell => {
+                    cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                });
+                
+                // Remove from data source after animation
+                setTimeout(() => {
+                    currentData.data.splice(idxIndex, 1);
+                    currentData.index.splice(idxIndex, 1);
+                    renderTable(currentData, false);
+                }, 600);
+            }, 1200); // 1.2s delay for ghosting
         }
     },
 
@@ -557,7 +724,21 @@ const actionRegistry = {
 
     // --- Filtering & Conditions ---
     keepScoreNot90: () => {
-        showConsole("df = df[df['Score'] != 90]", "=> Filtering table to KEEP rows where Score is NOT 90.");
+        const richHTML = `
+        <div class="syntax-view" style="background: transparent; padding: 0.5rem 0; margin-bottom: 0;">
+            <div class="syn-expression" style="margin-bottom: 0; font-size: 1.1rem;">
+                <span class="syn-plain" style="color:#e2e8f0;">df = </span><span class="syn-bold" style="color:#e2e8f0;">df</span><span class="syn-punct purple">[</span>
+                <div class="syn-group color-blue">
+                    <div class="syn-text"><span class="syn-plain" style="color:#e2e8f0;">df</span><span class="syn-punct green">[</span><span class="syn-plain" style="color:#e2e8f0;">'Score'</span><span class="syn-punct green">]</span> <span class="syn-plain" style="color:#e2e8f0;">!= 90</span></div>
+                    <div class="syn-brace"></div>
+                    <div class="syn-desc">
+                        <div class="desc-line"><span class="icon-check">✅</span> <span style="color:#94a3b8;">Keeps rows except those where Score = 90</span></div>
+                    </div>
+                </div>
+                <span class="syn-punct purple">]</span>
+            </div>
+        </div>`;
+        showConsole("df = df[df['Score'] != 90]", "=> Filtering table to KEEP rows where Score is NOT 90.", richHTML);
         
         const scoreIdx = currentData.columns.indexOf('Score');
         if(scoreIdx === -1) return;
@@ -568,19 +749,47 @@ const actionRegistry = {
             data: []
         };
         
+        const droppedIndices = [];
         for(let i=0; i<currentData.data.length; i++) {
             if(currentData.data[i][scoreIdx] != 90) {
                 filteredData.data.push(currentData.data[i]);
                 filteredData.index.push(currentData.index[i]);
+            } else {
+                droppedIndices.push(i);
+                const rowCells = document.querySelectorAll(`[id^="idx-${currentData.index[i]}"], [id^="cell-${currentData.index[i]}-"]`);
+                rowCells.forEach(cell => {
+                    cell.classList.add('ghosted-element');
+                });
             }
         }
         
-        tableContainer.innerHTML = '<div class="placeholder-text">Filtering Data...</div>';
-        setTimeout(() => renderTable(filteredData), 400);
+        setTimeout(() => {
+            for(let i of droppedIndices) {
+                const rowCells = document.querySelectorAll(`[id^="idx-${currentData.index[i]}"], [id^="cell-${currentData.index[i]}-"]`);
+                rowCells.forEach(cell => {
+                    cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                });
+            }
+            setTimeout(() => renderTable(filteredData, false), 600);
+        }, 1200);
     },
 
     dropScoreEq90: () => {
-        showConsole("df.drop(df[df['Score'] == 90].index)", "=> Visual table updated (Dropped rows where Score == 90)");
+        const richHTML = `
+        <div class="syntax-view" style="background: transparent; padding: 0.5rem 0; margin-bottom: 0;">
+            <div class="syn-expression" style="margin-bottom: 0; font-size: 1.1rem;">
+                <span class="syn-plain" style="color:#e2e8f0;">df.drop(</span><span class="syn-bold" style="color:#e2e8f0;">df</span><span class="syn-punct red">[</span>
+                <div class="syn-group color-orange">
+                    <div class="syn-text"><span class="syn-plain" style="color:#e2e8f0;">df</span><span class="syn-punct purple">[</span><span class="syn-plain" style="color:#e2e8f0;">'Score'</span><span class="syn-punct purple">]</span> <span class="syn-plain" style="color:#e2e8f0;">== 90</span></div>
+                    <div class="syn-brace"></div>
+                    <div class="syn-desc">
+                        <div class="desc-line"><span class="icon-cross">❌</span> <span style="color:#94a3b8;">Removes rows with Score = 90</span></div>
+                    </div>
+                </div>
+                <span class="syn-punct red">]</span><span class="syn-bold" style="color:#e2e8f0;">.index</span><span class="syn-plain" style="color:#e2e8f0;">)</span>
+            </div>
+        </div>`;
+        showConsole("df.drop(df[df['Score'] == 90].index)", "=> Visual table updated (Dropped rows where Score == 90)", richHTML);
         
         const scoreIdx = currentData.columns.indexOf('Score');
         if(scoreIdx === -1) return;
@@ -592,25 +801,34 @@ const actionRegistry = {
                 
                 const rowCells = document.querySelectorAll(`[id^="idx-${currentData.index[i]}"], [id^="cell-${currentData.index[i]}-"]`);
                 rowCells.forEach(cell => {
-                    cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                    cell.classList.add('ghosted-element');
                 });
             }
         }
         
         setTimeout(() => {
-            const newData = [];
-            const newIndex = [];
-            for(let i=0; i<currentData.data.length; i++) {
-                if(!droppedIndices.includes(i)) {
-                    newData.push(currentData.data[i]);
-                    newIndex.push(currentData.index[i]);
+            droppedIndices.forEach((dropIdx) => {
+                const rowCells = document.querySelectorAll(`[id^="idx-${currentData.index[dropIdx]}"], [id^="cell-${currentData.index[dropIdx]}-"]`);
+                rowCells.forEach(cell => {
+                    cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                });
+            });
+
+            setTimeout(() => {
+                const newData = [];
+                const newIndex = [];
+                for(let i=0; i<currentData.data.length; i++) {
+                    if(!droppedIndices.includes(i)) {
+                        newData.push(currentData.data[i]);
+                        newIndex.push(currentData.index[i]);
+                    }
                 }
-            }
-            currentData.data = newData;
-            currentData.index = newIndex;
-            
-            renderTable(currentData, false);
-        }, 600);
+                currentData.data = newData;
+                currentData.index = newIndex;
+                
+                renderTable(currentData, false);
+            }, 600);
+        }, 1200);
     },
 
     dropColIfAny: () => {
@@ -630,16 +848,22 @@ const actionRegistry = {
         if (anyUnder90) {
              const colCells = document.querySelectorAll(`[id^="col-${scoreIdx}"], [id^="cell-"][id$="-${scoreIdx}"]`);
              colCells.forEach(cell => {
-                 cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                 cell.classList.add('ghosted-element');
              });
 
              setTimeout(() => {
-                 currentData.columns.splice(scoreIdx, 1);
-                 for(let i=0; i<currentData.data.length; i++) {
-                     currentData.data[i].splice(scoreIdx, 1);
-                 }
-                 renderTable(currentData, false);
-             }, 600);
+                 colCells.forEach(cell => {
+                     cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                 });
+
+                 setTimeout(() => {
+                     currentData.columns.splice(scoreIdx, 1);
+                     for(let i=0; i<currentData.data.length; i++) {
+                         currentData.data[i].splice(scoreIdx, 1);
+                     }
+                     renderTable(currentData, false);
+                 }, 600);
+             }, 1200);
         }
     },
 
@@ -770,6 +994,21 @@ themeToggle.addEventListener('click', () => {
     isDarkTheme = !isDarkTheme;
     document.body.setAttribute('data-theme', isDarkTheme ? 'dark' : 'light');
 });
+
+const axisToggle = document.getElementById('axis-toggle-chk');
+if(axisToggle) {
+    axisToggle.addEventListener('change', (e) => {
+        const ax0 = document.getElementById('axis-0-overlay');
+        const ax1 = document.getElementById('axis-1-overlay');
+        if(e.target.checked) {
+            if(ax0) ax0.style.display = 'flex';
+            if(ax1) ax1.style.display = 'flex';
+        } else {
+            if(ax0) ax0.style.display = 'none';
+            if(ax1) ax1.style.display = 'none';
+        }
+    });
+}
 
 // Initialize
 setTopic('basics');
