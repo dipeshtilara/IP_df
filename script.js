@@ -60,9 +60,10 @@ const topicsInfo = {
     },
     modifications: {
         title: "DataFrame Modifications",
-        code: `# Manipulating Data\ndf = df.sort_values(by='Score', ascending=False)\ndf = df.rename(columns={'Name': 'Student'}) # Rename column\ndf.reindex([2, 0, 3]) # Reindex rows\ndf = df.drop(index=1) # Drop Bob\ndf = df.T # Transpose DataFrame\ndf['Grade'] = ['B', 'A', 'A', 'C'] # Add new column\n# Missing Data\ndf = df.fillna(0) # Replace NaNs with 0\ndf = df.dropna() # Drop rows with NaNs`,
+        code: `# Manipulating Data\ndf = df.sort_values(by='Score', ascending=False)\ndf = df.rename(columns={'Name': 'Student'}) # Rename column\ndf.reindex([2, 0, 3]) # Reindex rows\ndf = df.drop(index=1) # Drop Bob\ndf = df.T # Transpose DataFrame\ndf['Grade'] = ['B', 'A', 'A', 'C'] # Add new column\n# Missing Data\ndf = df.fillna(0) # Replace NaNs with 0\ndf = df.dropna() # Drop rows with NaNs\n# Advanced conditional assignment\nimport numpy as np\ndf['Result'] = np.where((df['Score'] > 90) & (df['Age'] > 25), 'Pass', 'Fail')`,
         buttons: [
             { label: "df['Grade'] = ... (Add Col)", action: "addColumn", class: "success" },
+            { label: "np.where(Score>90 & Age>25)", action: "npWhereAssign", class: "success" },
             { label: "df.reindex([2, 0, 3])", action: "reindexData", class: "primary" },
             { label: "df.fillna(0)", action: "fillNaData", class: "warning" },
             { label: "df.dropna()", action: "dropNaData", class: "danger" },
@@ -90,16 +91,20 @@ const topicsInfo = {
         code: `# 1. Keep only rows NOT equal to 90
 df = df[df['Score'] != 90]
 
-# 2. Remove rows where Score == 90
+# 2. Keep rows where Score >= 90 AND Age > 25
+df_filtered = df[(df['Score'] >= 90) & (df['Age'] > 25)]
+
+# 3. Remove rows where Score == 90
 df.drop(df[df['Score'] == 90].index)
 
-# 3. Drop column if ANY value in 'Score' < 90
-if (df['Score'] < 90).any(): 
-    df = df.drop(columns=['Score'])`,
+# 4. Complex Drop: Any Score < 90 OR Mean Score < 95
+cols = [c for c in ['Score'] if (df[c] < 90).any() | (df[c].mean() < 95)]
+df = df.drop(columns=cols)`,
         buttons: [
             { label: "Keep if Score != 90", action: "keepScoreNot90", class: "primary" },
+            { label: "Keep Score>=90 & Age>25", action: "multiConditionFilter", class: "primary" },
             { label: "Drop if Score == 90", action: "dropScoreEq90", class: "danger" },
-            { label: "Drop Col if Any Score < 90", action: "dropColIfAny", class: "warning" },
+            { label: "Complex Col Drop", action: "complexColDrop", class: "warning" },
             { label: "Reset DataFrame", action: "resetData", class: "" }
         ]
     },
@@ -867,6 +872,82 @@ const actionRegistry = {
         }
     },
 
+    multiConditionFilter: () => {
+        const richHTML = `
+        <div class="syntax-view" style="background: transparent; padding: 0.5rem 0; margin-bottom: 0;">
+            <div class="syn-expression" style="margin-bottom: 0; font-size: 1.1rem;">
+                <span class="syn-plain" style="color:#e2e8f0;">df = </span><span class="syn-bold" style="color:#e2e8f0;">df</span><span class="syn-punct purple">[</span>
+                <span class="syn-punct green">(</span><span class="syn-plain" style="color:#e2e8f0;">df['Score'] >= 90</span><span class="syn-punct green">)</span>
+                <span class="syn-bold" style="color:#e2e8f0;"> &amp; </span>
+                <span class="syn-punct green">(</span><span class="syn-plain" style="color:#e2e8f0;">df['Age'] > 25</span><span class="syn-punct green">)</span>
+                <span class="syn-punct purple">]</span>
+            </div>
+        </div>`;
+        showConsole("df_filtered = df[(df['Score'] >= 90) & (df['Age'] > 25)]", "=> Keeping rows meeting multiple conditions AND.", richHTML);
+        
+        const scoreIdx = currentData.columns.indexOf('Score');
+        const ageIdx = currentData.columns.indexOf('Age');
+        if (scoreIdx === -1 || ageIdx === -1) return;
+
+        const filteredData = { columns: currentData.columns, index: [], data: [] };
+        const droppedIndices = [];
+        for (let i = 0; i < currentData.data.length; i++) {
+            if (currentData.data[i][scoreIdx] >= 90 && currentData.data[i][ageIdx] > 25) {
+                filteredData.data.push(currentData.data[i]);
+                filteredData.index.push(currentData.index[i]);
+            } else {
+                droppedIndices.push(i);
+                const rowCells = document.querySelectorAll(`[id^="idx-${currentData.index[i]}"], [id^="cell-${currentData.index[i]}-"]`);
+                rowCells.forEach(cell => cell.classList.add('ghosted-element'));
+            }
+        }
+        
+        setTimeout(() => {
+            droppedIndices.forEach((dropIdx) => {
+                const rowCells = document.querySelectorAll(`[id^="idx-${currentData.index[dropIdx]}"], [id^="cell-${currentData.index[dropIdx]}-"]`);
+                rowCells.forEach(cell => {
+                    cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                });
+            });
+            setTimeout(() => renderTable(filteredData, false), 600);
+        }, 1200);
+    },
+
+    complexColDrop: () => {
+        showConsole("df = df.drop(columns=[c for c in ['Score'] if (df[c] < 90).any() | (df[c].mean() < 95)])", "=> Dropping Score based on ANY < 90 OR MEAN < 95.");
+        const scoreIdx = currentData.columns.indexOf('Score');
+        if(scoreIdx === -1) return;
+
+        let anyUnder90 = false;
+        let sum = 0;
+        let count = 0;
+        for(let i=0; i<currentData.data.length; i++) {
+            const val = currentData.data[i][scoreIdx];
+            if(val < 90) anyUnder90 = true;
+            sum += val;
+            count++;
+        }
+        const mean = count > 0 ? (sum / count) : 0;
+        
+        if (anyUnder90 || mean < 95) {
+            const colCells = document.querySelectorAll(`[id^="col-${scoreIdx}"], [id^="cell-"][id$="-${scoreIdx}"]`);
+            colCells.forEach(cell => cell.classList.add('ghosted-element'));
+
+            setTimeout(() => {
+                colCells.forEach(cell => {
+                    cell.style.animation = 'dropRow 0.6s forwards cubic-bezier(0.55, 0.085, 0.68, 0.53)';
+                });
+                setTimeout(() => {
+                    currentData.columns.splice(scoreIdx, 1);
+                    for(let i=0; i<currentData.data.length; i++) {
+                        currentData.data[i].splice(scoreIdx, 1);
+                    }
+                    renderTable(currentData, false);
+                }, 600);
+            }, 1200);
+        }
+    },
+
     // --- Enhanced Modifications ---
     fillNaData: () => {
         showConsole("df = df.fillna(0)", "=> Replacing all NaN values with 0");
@@ -944,6 +1025,40 @@ const actionRegistry = {
         renderTable(currentData, false);
         
         // Highlight the new column
+        setTimeout(() => {
+            const newColIdx = currentData.columns.length - 1;
+            const colHeader = document.getElementById(`col-${newColIdx}`);
+            if(colHeader) colHeader.classList.add('anim-highlight');
+            
+            const dataCells = document.querySelectorAll(`[id^="cell-"][id$="-${newColIdx}"]`);
+            dataCells.forEach(cell => {
+                cell.classList.add('anim-highlight');
+            });
+        }, 50);
+    },
+
+    npWhereAssign: () => {
+        showConsole("df['Result'] = np.where((df['Score'] > 90) & (df['Age'] > 25), 'Pass', 'Fail')", "=> Creating Result col based on multiple conditions.");
+        
+        if (currentData.columns.includes('Result')) return;
+        
+        currentData.columns.push('Result');
+        const scoreIdx = currentData.columns.indexOf('Score');
+        const ageIdx = currentData.columns.indexOf('Age');
+        
+        for(let i=0; i<currentData.data.length; i++) {
+            let pass = false;
+            // Find current data in row
+            if (scoreIdx > -1 && ageIdx > -1) {
+                if (currentData.data[i][scoreIdx] > 90 && currentData.data[i][ageIdx] > 25) {
+                    pass = true;
+                }
+            }
+            currentData.data[i].push(pass ? 'Pass' : 'Fail');
+        }
+        
+        renderTable(currentData, false);
+        
         setTimeout(() => {
             const newColIdx = currentData.columns.length - 1;
             const colHeader = document.getElementById(`col-${newColIdx}`);
