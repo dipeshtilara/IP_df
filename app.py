@@ -23,7 +23,7 @@ st.markdown(hide_st_style, unsafe_allow_html=True)
 
 def load_visualizer():
     # 3. Read the external files
-    # Assumes index.html, style.css, and script.js are in the same folder
+    # Assumes index.html, styles.css, and script.js are in the same folder
     try:
         with open("index.html", "r", encoding="utf-8") as f:
             html_content = f.read()
@@ -35,7 +35,7 @@ def load_visualizer():
         # 4. Inject CSS and JS into the HTML
         # Replacing the link/script tags with actual content
         full_html = html_content.replace(
-            '<link rel="stylesheet" href="style.css">', 
+            '<link rel="stylesheet" href="styles.css">', 
             f'<style>{css_content}</style>'
         ).replace(
             '<script src="script.js"></script>', 
