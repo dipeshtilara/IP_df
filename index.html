@@ -6,7 +6,7 @@
     <title>Pandas DataFrame Visualizer</title>
     <meta name="description" content="Interactive learning platform for Pandas DataFrame concepts covering basics, attributes, modifications, CSV data transfer and iterations.">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles.css?v=5">
 </head>
 <body>
     <div class="app-container">
@@ -72,7 +72,16 @@
                 <!-- Visualization Stage -->
                 <div class="visualization-stage glass-panel">
                     <div class="stage-header">
-                        <h3>Output Visualization</h3>
+                        <div style="display: flex; align-items: center; gap: 20px;">
+                            <h3>Output Visualization</h3>
+                            <div class="axis-toggle" style="display: flex; align-items: center; gap: 8px;">
+                                <label class="switch">
+                                    <input type="checkbox" id="axis-toggle-chk">
+                                    <span class="slider round"></span>
+                                </label>
+                                <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">Show Axes</span>
+                            </div>
+                        </div>
                         <div class="status-indicator"></div>
                     </div>
                     
@@ -89,15 +98,29 @@
                             <div class="output-line" id="console-output"></div>
                         </div>
                     </div>
+                    
+                    <div id="rich-syntax-output" style="display: none; margin-bottom: 1.5rem;"></div>
 
-                    <div class="table-container" id="table-container">
-                        <!-- DataFrame Table will be rendered here -->
-                        <div class="placeholder-text">Click an action to visualize the DataFrame.</div>
+                    <div class="table-wrapper" id="table-wrapper" style="position: relative; flex-grow: 1; display: flex; flex-direction: column;">
+                        <div class="axis-horizontal" id="axis-1-overlay">
+                            <div class="axis-line"></div>
+                            <span class="axis-label">Axis 1 (Columns) &rarr;</span>
+                        </div>
+                        <div style="display: flex; flex-grow: 1;">
+                            <div class="axis-vertical" id="axis-0-overlay">
+                                <span class="axis-label">&darr; Axis 0<br>(Rows)</span>
+                                <div class="axis-line"></div>
+                            </div>
+                            <div class="table-container" id="table-container">
+                                <!-- DataFrame Table will be rendered here -->
+                                <div class="placeholder-text">Click an action to visualize the DataFrame.</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </main>
     </div>
-    <script src="script.js"></script>
+    <script src="script.js?v=3"></script>
 </body>
 </html>
