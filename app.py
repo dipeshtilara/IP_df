@@ -27,7 +27,7 @@ def load_visualizer():
     try:
         with open("index.html", "r", encoding="utf-8") as f:
             html_content = f.read()
-        with open("style.css", "r", encoding="utf-8") as f:
+        with open("styles.css", "r", encoding="utf-8") as f:
             css_content = f.read()
         with open("script.js", "r", encoding="utf-8") as f:
             js_content = f.read()
