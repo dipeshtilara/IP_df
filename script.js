@@ -110,11 +110,26 @@ df = df.drop(columns=cols)`,
     },
     transfer: {
         title: "CSV Data Transfer",
-        desc: "Easily load data from CSV files and export DataFrame to CSV format.",
-        code: `# Reading and Writing CSV files\n\n# Read from CSV\ndf = pd.read_csv('students.csv')\n\n# Write to CSV\ndf.to_csv('backup.csv', index=False)`,
+        desc: "Load data from CSV files using important attributes like nrows, header, index_col, skiprows, usecols, and names.",
+        code: `# 1. Read specific columns and limit rows
+df = pd.read_csv('data.csv', usecols=['Name', 'Score'], nrows=100)
+
+# 2. Skip initial rows and rename columns (ignoring original header)
+df = pd.read_csv('data.csv', skiprows=2, names=['Col1', 'Col2'], header=0)
+
+# 3. Set a specific column as the DataFrame index
+df = pd.read_csv('data.csv', index_col='ID')
+
+# 4. Write to CSV without exporting the row index
+df.to_csv('backup.csv', index=False)`,
         buttons: [
-            { label: "pd.read_csv()", action: "animateCSVRead", class: "primary" },
-            { label: "df.to_csv()", action: "animateCSVWrite", class: "success" }
+            { label: "df.to_csv()", action: "animateCSVWrite", class: "success" },
+            { label: "nrows=2", action: "csvReadNrows", class: "primary" },
+            { label: "skiprows=1", action: "csvReadSkiprows", class: "primary" },
+            { label: "usecols=['Name', 'Score']", action: "csvReadUsecols", class: "primary" },
+            { label: "header=0, names=[...]", action: "csvReadNames", class: "primary" },
+            { label: "index_col='Name'", action: "csvReadIndexCol", class: "primary" },
+            { label: "Reset Initial", action: "resetData", class: "warning" }
         ]
     },
     iteration: {
@@ -1115,6 +1130,72 @@ const actionRegistry = {
         
         tableContainer.innerHTML = '<div class="placeholder-text">Reindexing Data...</div>';
         setTimeout(() => renderTable(currentData, false), 400);
+    },
+
+    // --- CSV Specific Methods ---
+    animateCSVWrite: () => {
+        showConsole("df.to_csv('backup.csv', index=False)", "=> Exporting DataFrame to CSV format...");
+        const csvContainer = document.createElement('div');
+        csvContainer.className = 'placeholder-text';
+        csvContainer.style.fontFamily = 'monospace';
+        csvContainer.style.whiteSpace = 'pre';
+        csvContainer.style.textAlign = 'left';
+        csvContainer.style.color = '#10b981';
+        
+        let headerRow = currentData.columns.join(',');
+        let dataRows = currentData.data.map(row => row.join(',')).join('\\n');
+        csvContainer.innerHTML = 'Writing to backup.csv...<br><br>' + headerRow + '<br>' + dataRows;
+        
+        tableContainer.innerHTML = '';
+        tableContainer.appendChild(csvContainer);
+    },
+
+    csvReadNrows: () => {
+        showConsole("pd.read_csv('data.csv', nrows=2)", "=> Reading only the first 2 rows from the CSV file.");
+        const newData = JSON.parse(JSON.stringify(defaultData));
+        newData.data = newData.data.slice(0, 2);
+        newData.index = newData.index.slice(0, 2);
+        currentData = newData;
+        renderTable();
+    },
+
+    csvReadSkiprows: () => {
+        showConsole("pd.read_csv('data.csv', skiprows=1)", "=> Skipping the first row (e.g., Alice's data) when reading.");
+        const newData = JSON.parse(JSON.stringify(defaultData));
+        newData.data = newData.data.slice(1);
+        newData.index = [0, 1, 2]; // new 0-indexed default index
+        currentData = newData;
+        renderTable();
+    },
+
+    csvReadUsecols: () => {
+        showConsole("pd.read_csv('data.csv', usecols=['Name', 'Score'])", "=> Loading only specific columns into DataFrame.");
+        const newData = {
+            columns: ['Name', 'Score'],
+            index: defaultData.index,
+            data: defaultData.data.map(row => [row[0], row[2]])
+        };
+        currentData = newData;
+        renderTable();
+    },
+
+    csvReadNames: () => {
+        showConsole("pd.read_csv('data.csv', header=0, names=['Student_Name', 'Student_Age', 'Student_Score'])", "=> Overwriting default header names with custom ones.");
+        const newData = JSON.parse(JSON.stringify(defaultData));
+        newData.columns = ['Student_Name', 'Student_Age', 'Student_Score'];
+        currentData = newData;
+        renderTable();
+    },
+
+    csvReadIndexCol: () => {
+        showConsole("pd.read_csv('data.csv', index_col='Name')", "=> Using the 'Name' column as the row index labels.");
+        const newData = {
+            columns: ['Age', 'Score'],
+            index: defaultData.data.map(row => row[0]), // Use 'Name' as index
+            data: defaultData.data.map(row => [row[1], row[2]]) // Age, Score
+        };
+        currentData = newData;
+        renderTable();
     }
 };
 
