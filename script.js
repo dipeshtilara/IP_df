@@ -10,6 +10,17 @@ const defaultData = {
     ]
 };
 
+const missingData = {
+    columns: ['Name', 'Age', 'Score'],
+    index: [0, 1, 2, 3],
+    data: [
+        ['Alice', 25, 'NaN'],
+        ['Bob', 'NaN', 90],
+        ['Charlie', 35, 'NaN'],
+        ['David', 40, 80]
+    ]
+};
+
 // State
 let currentTopic = 'basics';
 let currentData = JSON.parse(JSON.stringify(defaultData)); 
@@ -60,18 +71,38 @@ const topicsInfo = {
     },
     modifications: {
         title: "DataFrame Modifications",
-        code: `# Manipulating Data\ndf = df.sort_values(by='Score', ascending=False)\ndf = df.rename(columns={'Name': 'Student'}) # Rename column\ndf.reindex([2, 0, 3]) # Reindex rows\ndf = df.drop(index=1) # Drop Bob\ndf = df.T # Transpose DataFrame\ndf['Grade'] = ['B', 'A', 'A', 'C'] # Add new column\n# Missing Data\ndf = df.fillna(0) # Replace NaNs with 0\ndf = df.dropna() # Drop rows with NaNs\n# Advanced conditional assignment\nimport numpy as np\ndf['Result'] = np.where((df['Score'] > 90) & (df['Age'] > 25), 'Pass', 'Fail')`,
+        code: `# Manipulating Data\ndf = df.sort_values(by='Score', ascending=False)\ndf = df.rename(columns={'Name': 'Student'}) # Rename column\ndf.reindex([2, 0, 3]) # Reindex rows\ndf = df.drop(index=1) # Drop Bob\ndf = df.T # Transpose DataFrame\ndf['Grade'] = ['B', 'A', 'A', 'C'] # Add new column\n# Advanced conditional assignment\nimport numpy as np\ndf['Result'] = np.where((df['Score'] > 90) & (df['Age'] > 25), 'Pass', 'Fail')`,
         buttons: [
             { label: "df['Grade'] = ... (Add Col)", action: "addColumn", class: "success" },
             { label: "np.where(Score>90 & Age>25)", action: "npWhereAssign", class: "success" },
-            { label: "df.reindex([2, 0, 3])", action: "reindexData", class: "primary" },
-            { label: "df.fillna(0)", action: "fillNaData", class: "warning" },
-            { label: "df.dropna()", action: "dropNaData", class: "danger" },
             { label: "Rename 'Name' to 'Student'", action: "renameCol", class: "warning" },
+            { label: "df.reindex([2, 0, 3])", action: "reindexData", class: "primary" },
             { label: "df.T (Transpose)", action: "transposeData", class: "" },
             { label: "Sort by Score (Desc)", action: "sortScore", class: "" },
             { label: "Drop Row 1 (Bob)", action: "dropRow", class: "danger" },
             { label: "Reset DataFrame", action: "resetData", class: "" }
+        ]
+    },
+    missing: {
+        title: "Missing Data Handling (NaN)",
+        desc: "Functions for dropping or replacing entirely missing values (NaN) in a DataFrame.",
+        code: `# Fill missing values with a constant number 0
+df = df.fillna(0)
+
+# Forward fill (propagate last valid observation forward)
+df = df.fillna(method='ffill')
+
+# Backward fill (use NEXT valid observation to fill gap)
+df = df.fillna(method='bfill')
+
+# Drop any row that contains at least one NaN
+df = df.dropna()`,
+        buttons: [
+            { label: "df.fillna(value=0)", action: "fillNaData", class: "warning" },
+            { label: "df.fillna(method='ffill')", action: "fillNaDataFfill", class: "warning" },
+            { label: "df.fillna(method='bfill')", action: "fillNaDataBfill", class: "warning" },
+            { label: "df.dropna()", action: "dropNaData", class: "danger" },
+            { label: "Reset NaN DataFrame", action: "resetMissingData", class: "primary" }
         ]
     },
     selection: {
@@ -202,8 +233,14 @@ function setTopic(topic) {
         actionButtons.appendChild(button);
     });
 
-    // Reset data
-    resetData();
+    // Reset data based on context
+    if (topic === 'missing') {
+        currentData = JSON.parse(JSON.stringify(missingData));
+        if(actionConsole) actionConsole.classList.remove('visible');
+        renderTable();
+    } else {
+        resetData();
+    }
 }
 
 function renderTable(dataObj = currentData, animate = true) {
@@ -247,6 +284,12 @@ function createCell(content, className, id = '') {
 
 function resetData() {
     currentData = JSON.parse(JSON.stringify(defaultData));
+    if(actionConsole) actionConsole.classList.remove('visible');
+    renderTable();
+}
+
+function resetMissingData() {
+    currentData = JSON.parse(JSON.stringify(missingData));
     if(actionConsole) actionConsole.classList.remove('visible');
     renderTable();
 }
@@ -1008,7 +1051,55 @@ const actionRegistry = {
                 setTimeout(() => df.style.boxShadow = '', 1000);
             }
         } else {
-            consoleOutput.textContent += "\n(No NaN values found in the data)";
+            consoleOutput.textContent += "\\n(No NaN values found. Try introducing NaNs first!)";
+        }
+    },
+
+    fillNaDataFfill: () => {
+        showConsole("df = df.fillna(method='ffill')", "=> Forward-filling NaN values with the previous row's value.");
+        let hasNan = false;
+        
+        for(let c=0; c<currentData.columns.length; c++) {
+            let lastValid = null;
+            for(let r=0; r<currentData.data.length; r++) {
+                if(currentData.data[r][c] === 'NaN' || Number.isNaN(currentData.data[r][c])) {
+                    if (lastValid !== null) {
+                        currentData.data[r][c] = lastValid;
+                        hasNan = true;
+                    }
+                } else {
+                    lastValid = currentData.data[r][c];
+                }
+            }
+        }
+
+        renderTable(currentData, false);
+        if(!hasNan) {
+            consoleOutput.textContent += "\\n(No NaN values found. Try introducing NaNs first!)";
+        }
+    },
+
+    fillNaDataBfill: () => {
+        showConsole("df = df.fillna(method='bfill')", "=> Backward-filling NaN values with the next row's value.");
+        let hasNan = false;
+        
+        for(let c=0; c<currentData.columns.length; c++) {
+            let nextValid = null;
+            for(let r=currentData.data.length - 1; r>=0; r--) {
+                if(currentData.data[r][c] === 'NaN' || Number.isNaN(currentData.data[r][c])) {
+                    if (nextValid !== null) {
+                        currentData.data[r][c] = nextValid;
+                        hasNan = true;
+                    }
+                } else {
+                    nextValid = currentData.data[r][c];
+                }
+            }
+        }
+
+        renderTable(currentData, false);
+        if(!hasNan) {
+            consoleOutput.textContent += "\\n(No NaN values found. Try introducing NaNs first!)";
         }
     },
 
@@ -1041,7 +1132,7 @@ const actionRegistry = {
         setTimeout(() => {
             renderTable(currentData, false);
             if(!hasNanRows) {
-               consoleOutput.textContent += "\n(No NaN values found, no rows dropped)";
+               consoleOutput.textContent += "\\n(No NaN values found. Try introducing NaNs first!)";
             }
         }, 400);
     },
@@ -1130,6 +1221,11 @@ const actionRegistry = {
         
         tableContainer.innerHTML = '<div class="placeholder-text">Reindexing Data...</div>';
         setTimeout(() => renderTable(currentData, false), 400);
+    },
+
+    resetMissingData: () => {
+        showConsole("df = original_nan_df.copy()", "=> Resetted reference DataFrame with missing values.");
+        resetMissingData();
     },
 
     // --- CSV Specific Methods ---
