@@ -1,0 +1,252 @@
+[
+  {
+    "question": "What is the primary data structure of the Pandas library used to handle 2-dimensional tabular data?",
+    "options": ["(a) Series", "(b) Panel", "(c) DataFrame", "(d) Array"],
+    "answer": "(c) DataFrame"
+  },
+  {
+    "question": "Which attribute returns the total number of elements in a DataFrame?",
+    "options": ["(a) df.size", "(b) df.shape", "(c) df.count", "(d) df.length"],
+    "answer": "(a) df.size"
+  },
+  {
+    "question": "How do you check the number of dimensions of a DataFrame?",
+    "options": ["(a) df.dimensions", "(b) df.ndim", "(c) df.dim", "(d) df.shape"],
+    "answer": "(b) df.ndim"
+  },
+  {
+    "question": "What will `df.empty` return if the DataFrame contains no data?",
+    "options": ["(a) 0", "(b) None", "(c) True", "(d) False"],
+    "answer": "(c) True"
+  },
+  {
+    "question": "Which of the following attributes shows the data types of all columns?",
+    "options": ["(a) df.type", "(b) df.datatypes", "(c) df.dtypes", "(d) df.info"],
+    "answer": "(c) df.dtypes"
+  },
+  {
+    "question": "How do you check if there are any missing values (NaN) in a DataFrame?",
+    "options": ["(a) df.contains_nan()", "(b) df.isnull().all()", "(c) df.isna().any()", "(d) df.missing()"],
+    "answer": "(c) df.isna().any()"
+  },
+  {
+    "question": "You want to find the shape (rows and columns) of `df`. Which is correct?",
+    "options": ["(a) df.size()", "(b) df.shape", "(c) len(df)", "(d) df.dim()"],
+    "answer": "(b) df.shape"
+  },
+  {
+    "question": "Which of the following views the names of all the columns?",
+    "options": ["(a) df.columns", "(b) df.headers", "(c) df.keys()", "(d) df.names"],
+    "answer": "(a) df.columns"
+  },
+  {
+    "question": "Which of the following views the row labels of the DataFrame?",
+    "options": ["(a) df.labels", "(b) df.rows", "(c) df.index", "(d) df.keys()"],
+    "answer": "(c) df.index"
+  },
+  {
+    "question": "To convert a dictionary of lists into a DataFrame, which function is used?",
+    "options": ["(a) pd.Series()", "(b) pd.Table()", "(c) pd.List()", "(d) pd.DataFrame()"],
+    "answer": "(d) pd.DataFrame()"
+  },
+  {
+    "question": "Which method is used to display the first 5 rows of a DataFrame?",
+    "options": ["(a) df.top(5)", "(b) df.head()", "(c) df.first(5)", "(d) df.show(5)"],
+    "answer": "(b) df.head()"
+  },
+  {
+    "question": "Which method is used to display the last 3 rows of a DataFrame?",
+    "options": ["(a) df.tail(3)", "(b) df.bottom(3)", "(c) df.end(3)", "(d) df.last(3)"],
+    "answer": "(a) df.tail(3)"
+  },
+  {
+    "question": "If you want to access a specific column 'Age' from DataFrame `df`, which syntax is valid?",
+    "options": ["(a) df('Age')", "(b) df['Age']", "(c) df.get('Age')", "(d) df.col('Age')"],
+    "answer": "(b) df['Age']"
+  },
+  {
+    "question": "Which of the following extracts multiple columns 'Name' and 'Score'?",
+    "options": ["(a) df['Name', 'Score']", "(b) df[['Name', 'Score']]", "(c) df('Name', 'Score')", "(d) df({'Name', 'Score'})"],
+    "answer": "(b) df[['Name', 'Score']]"
+  },
+  {
+    "question": "The primary purpose of the `df.loc[]` indexer is:",
+    "options": ["(a) Label-based indexing", "(b) Integer Position-based indexing", "(c) Logical filtering", "(d) Finding NaN values"],
+    "answer": "(a) Label-based indexing"
+  },
+  {
+    "question": "The primary purpose of the `df.iloc[]` indexer is:",
+    "options": ["(a) Label-based indexing", "(b) Integer Position-based indexing", "(c) Checking for location", "(d) Sorting data"],
+    "answer": "(b) Integer Position-based indexing"
+  },
+  {
+    "question": "How do you drop the column 'City' from `df`?",
+    "options": ["(a) df.remove('City')", "(b) df.discard(columns=['City'])", "(c) df.drop(columns=['City'])", "(d) df.delete('City')"],
+    "answer": "(c) df.drop(columns=['City'])"
+  },
+  {
+    "question": "What is the result of `df[df['Score'] > 90]`?",
+    "options": ["(a) A boolean array", "(b) A filtered DataFrame keeping rows where Score > 90", "(c) Dropping all rows with Score > 90", "(d) Syntax Error"],
+    "answer": "(b) A filtered DataFrame keeping rows where Score > 90"
+  },
+  {
+    "question": "Which method renames the column 'Marks' to 'Score'?",
+    "options": ["(a) df.rename_col('Marks', 'Score')", "(b) df.rename(columns={'Marks': 'Score'})", "(c) df.columns['Marks'] = 'Score'", "(d) df.change_names({'Marks': 'Score'})"],
+    "answer": "(b) df.rename(columns={'Marks': 'Score'})"
+  },
+  {
+    "question": "How can you transpose a DataFrame (swap rows and columns)?",
+    "options": ["(a) df.transpose() or df.T", "(b) df.swap()", "(c) df.flip()", "(d) df.invert()"],
+    "answer": "(a) df.transpose() or df.T"
+  },
+  {
+    "question": "To add a new column 'Grade' with a default value of 'A' for all rows, use:",
+    "options": ["(a) df.insert('Grade', 'A')", "(b) df['Grade'] = 'A'", "(c) df.add_col('Grade', 'A')", "(d) df.append_column('Grade', 'A')"],
+    "answer": "(b) df['Grade'] = 'A'"
+  },
+  {
+    "question": "Which method replaces NaN values with 0?",
+    "options": ["(a) df.replace_nan(0)", "(b) df.fillna(0)", "(c) df.dropna(0)", "(d) df.set_null(0)"],
+    "answer": "(b) df.fillna(0)"
+  },
+  {
+    "question": "Which method drops all rows containing at least one NaN value?",
+    "options": ["(a) df.drop_missing()", "(b) df.remove_nulls()", "(c) df.dropna()", "(d) df.clean()"],
+    "answer": "(c) df.dropna()"
+  },
+  {
+    "question": "To logically sort a DataFrame by the values in the 'Age' column, use:",
+    "options": ["(a) df.sort('Age')", "(b) df.order_by('Age')", "(c) df.sort_values(by='Age')", "(d) df.arrange('Age')"],
+    "answer": "(c) df.sort_values(by='Age')"
+  },
+  {
+    "question": "How do you write a DataFrame to a CSV file named 'data.csv' without writing the row indices?",
+    "options": ["(a) df.to_csv('data.csv')", "(b) df.write_csv('data.csv', index_col=False)", "(c) df.to_csv('data.csv', index=False)", "(d) df.save('data.csv')"],
+    "answer": "(c) df.to_csv('data.csv', index=False)"
+  },
+  {
+    "question": "Which command reads data from 'students.csv' into a DataFrame?",
+    "options": ["(a) pd.load_csv('students.csv')", "(b) pd.read_csv('students.csv')", "(c) df.import('students.csv')", "(d) pd.open('students.csv')"],
+    "answer": "(b) pd.read_csv('students.csv')"
+  },
+  {
+    "question": "What does `df.iterrows()` allow you to do?",
+    "options": ["(a) Iterate over columns as (column_name, Series) pairs", "(b) Iterate over rows as (index, Series) pairs", "(c) Reverse the DataFrame", "(d) Count the rows"],
+    "answer": "(b) Iterate over rows as (index, Series) pairs"
+  },
+  {
+    "question": "To drop a column 'B' ONLY IF any negative value exists in column 'A', which is correct?",
+    "options": ["(a) if (df['A'] < 0).any(): df = df.drop(columns=['B'])", "(b) df.drop('B') where df['A'] < 0", "(c) if df['A'] < 0: df.drop('B')", "(d) df.drop_if('B', condition=df['A']<0)"],
+    "answer": "(a) if (df['A'] < 0).any(): df = df.drop(columns=['B'])"
+  },
+  {
+    "question": "Which Pandas Series method checks if ALL elements evaluate to True?",
+    "options": ["(a) .all()", "(b) .any()", "(c) .every()", "(d) .check_all()"],
+    "answer": "(a) .all()"
+  },
+  {
+    "question": "Which Pandas Series method checks if AT LEAST ONE element evaluates to True?",
+    "options": ["(a) .all()", "(b) .any()", "(c) .some()", "(d) .exists()"],
+    "answer": "(b) .any()"
+  },
+  {
+    "question": "How do you filter a DataFrame to keep rows where 'Score' >= 90 AND 'Age' > 25?",
+    "options": ["(a) df[df['Score'] >= 90 and df['Age'] > 25]", "(b) df[(df['Score'] >= 90) & (df['Age'] > 25)]", "(c) df[df.Score >= 90 && df.Age > 25]", "(d) df.filter(Score>=90, Age>25)"],
+    "answer": "(b) df[(df['Score'] >= 90) & (df['Age'] > 25)]"
+  },
+  {
+    "question": "Which axis refers to columns in a 2-dimensional DataFrame?",
+    "options": ["(a) axis=0", "(b) axis=1", "(c) axis=-1", "(d) axis=2"],
+    "answer": "(b) axis=1"
+  },
+  {
+    "question": "Which axis refers to rows in a 2-dimensional DataFrame?",
+    "options": ["(a) axis=0", "(b) axis=1", "(c) axis=-1", "(d) axis=2"],
+    "answer": "(a) axis=0"
+  },
+  {
+    "question": "How can you change the index order explicitly using existing row labels [2, 0, 3]?",
+    "options": ["(a) df.order([2, 0, 3])", "(b) df.rearrange([2, 0, 3])", "(c) df.reindex([2, 0, 3])", "(d) df.set_index([2, 0, 3])"],
+    "answer": "(c) df.reindex([2, 0, 3])"
+  },
+  {
+    "question": "To add a new row to the end of a DataFrame by providing a dictionary, you can use:",
+    "options": ["(a) df.loc[len(df)] = new_dict", "(b) df.append(new_dict, ignore_index=True)", "(c) pd.concat([df, pd.DataFrame([new_dict])], ignore_index=True)", "(d) All of the above (historically or currently)"],
+    "answer": "(d) All of the above (historically or currently)"
+  },
+  {
+    "question": "What happens if you slice a DataFrame using `df.iloc[0:2]`?",
+    "options": ["(a) It selects the first column only", "(b) It selects rows at integer index 0 and 1", "(c) It selects rows labeled '0' and '2'", "(d) Returns a compilation error"],
+    "answer": "(b) It selects rows at integer index 0 and 1"
+  },
+  {
+    "question": "Which method is used to drop duplicates from a DataFrame?",
+    "options": ["(a) df.unique()", "(b) df.drop_duplicates()", "(c) df.dedupe()", "(d) df.remove_dups()"],
+    "answer": "(b) df.drop_duplicates()"
+  },
+  {
+    "question": "What is the equivalent of `np.where(condition, x, y)` strictly within Pandas methods for modifying a column?",
+    "options": ["(a) Series.where() and Series.mask() can be used conditionally", "(b) Series.cond()", "(c) Series.if_else()", "(d) None, you must use numpy"],
+    "answer": "(a) Series.where() and Series.mask() can be used conditionally"
+  },
+  {
+    "question": "How do you calculate the arithmetic mean of a numeric column 'Score'?",
+    "options": ["(a) df['Score'].mean()", "(b) df['Score'].avg()", "(c) df['Score'].average()", "(d) sum(df['Score'])/len(df)"],
+    "answer": "(a) df['Score'].mean()"
+  },
+  {
+    "question": "What is the result of `df['Age'].max()`?",
+    "options": ["(a) Error for non-string types", "(b) Returns the highest value in the 'Age' column", "(c) Drops the lowest age value", "(d) Sorts the columns descending"],
+    "answer": "(b) Returns the highest value in the 'Age' column"
+  },
+  {
+    "question": "How can you count the number of students in each 'Section'?",
+    "options": ["(a) df.count('Section')", "(b) df['Section'].value_counts()", "(c) df.groupby('Section').size()", "(d) Both b and c are valid approaches"],
+    "answer": "(d) Both b and c are valid approaches"
+  },
+  {
+    "question": "If you want to group data by 'Class' and calculate the mean marks for each class, which is correct?",
+    "options": ["(a) df.group('Class').mean()", "(b) df.groupby('Class')['Marks'].mean()", "(c) df.aggregate(mean_by='Class')", "(d) df['Marks'].groupby(Class).avg()"],
+    "answer": "(b) df.groupby('Class')['Marks'].mean()"
+  },
+  {
+    "question": "What will `df[df['Score'].between(80, 90)]` do?",
+    "options": ["(a) Return rows where Score is inclusively between 80 and 90", "(b) Check if any element is between 80 and 90", "(c) Raise a Syntax Error", "(d) Replace scores between 80 and 90 with NaN"],
+    "answer": "(a) Return rows where Score is inclusively between 80 and 90"
+  },
+  {
+    "question": "To keep all rows except those where 'Location' equals 'Lucknow', use:",
+    "options": ["(a) df[df['Location'] != 'Lucknow']", "(b) df.remove(Location='Lucknow')", "(c) df.drop(Location='Lucknow')", "(d) df.delete('Lucknow')"],
+    "answer": "(a) df[df['Location'] != 'Lucknow']"
+  },
+  {
+    "question": "Which array backend does Pandas traditionally use under the hood?",
+    "options": ["(a) List", "(b) NumPy", "(c) Set", "(d) Dictionary"],
+    "answer": "(b) NumPy"
+  },
+  {
+    "question": "If you sort values by 'Score' descending, what is the valid parameter?",
+    "options": ["(a) desc=True", "(b) order='desc'", "(c) ascending=False", "(d) reverse=True"],
+    "answer": "(c) ascending=False"
+  },
+  {
+    "question": "Which loop iterates over DataFrame columns?",
+    "options": ["(a) for index, row in df.iterrows():", "(b) for col_name, col_data in df.items():", "(c) for val in df.values:", "(d) for key in df.keys:"],
+    "answer": "(b) for col_name, col_data in df.items():"
+  },
+  {
+    "question": "In the syntax `df.loc[row_label, column_label]`, what does it select?",
+    "options": ["(a) A specific mathematical intersection or cell", "(b) Nothing, it errors out", "(c) All columns for that row", "(d) All rows for that column"],
+    "answer": "(a) A specific mathematical intersection or cell"
+  },
+  {
+    "question": "To drop the first row of a DataFrame using its index without knowing the explicit label, you could use:",
+    "options": ["(a) df.drop(df.index[0])", "(b) df.drop_first_row()", "(c) df.remove(0)", "(d) df.pop(0)"],
+    "answer": "(a) df.drop(df.index[0])"
+  },
+  {
+    "question": "Which of the following describes setting up multiple conditions for filtering?",
+    "options": ["(a) Wrap each condition in parentheses ( ) and use bitwise operators like & or |", "(b) Wrap each condition in brackets [ ] and use 'and' / 'or'", "(c) Use commas to separate conditional strings", "(d) Use Python's built-in sum() on conditions"],
+    "answer": "(a) Wrap each condition in parentheses ( ) and use bitwise operators like & or |"
+  }
+]

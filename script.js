@@ -131,7 +131,29 @@ df = df.drop(columns=cols)`,
 // Core Functions
 function setTopic(topic) {
     currentTopic = topic;
+    
+    const mainControls = document.getElementById('main-controls');
+    const mainVis = document.getElementById('main-visualization');
+    const quizContainer = document.getElementById('quiz-container');
+
+    if (topic === 'quiz') {
+        if(mainControls) mainControls.style.display = 'none';
+        if(mainVis) mainVis.style.display = 'none';
+        if(quizContainer) quizContainer.style.display = 'flex';
+        
+        topicTitle.textContent = "Practice Quiz";
+        topicDoc.textContent = "Test your Pandas knowledge by answering 5 randomly selected questions.";
+        startQuiz();
+        return;
+    } else {
+        if(mainControls) mainControls.style.display = 'flex';
+        if(mainVis) mainVis.style.display = 'flex';
+        if(quizContainer) quizContainer.style.display = 'none';
+    }
+
     const info = topicsInfo[topic];
+    if (!info) return;
+
     topicTitle.textContent = info.title;
     topicDoc.textContent = info.desc;
     
@@ -734,7 +756,7 @@ const actionRegistry = {
             <div class="syn-expression" style="margin-bottom: 0; font-size: 1.1rem;">
                 <span class="syn-plain" style="color:#e2e8f0;">df = </span><span class="syn-bold" style="color:#e2e8f0;">df</span><span class="syn-punct purple">[</span>
                 <div class="syn-group color-blue">
-                    <div class="syn-text"><span class="syn-plain" style="color:#e2e8f0;">df</span><span class="syn-punct green">[</span><span class="syn-plain" style="color:#e2e8f0;">'Score'</span><span class="syn-punct green">]</span> <span class="syn-plain" style="color:#e2e8f0;">!= 90</span></div>
+                    <div class="syn-text"><span class="syn-plain" style="color:#e2e8f0;">df</span><span class="syn-punct green">[</span><span class="syn-plain" style="color:#e2e8f0;">'Score'</span><span class="syn-punct green">]</span> <span class="syn-plain" style="color:#e2e8f0;">!<span>=</span> 90</span></div>
                     <div class="syn-brace"></div>
                     <div class="syn-desc">
                         <div class="desc-line"><span class="icon-check">✅</span> <span style="color:#94a3b8;">Keeps rows except those where Score = 90</span></div>
@@ -1127,3 +1149,151 @@ if(axisToggle) {
 
 // Initialize
 setTopic('basics');
+
+// --- Quiz Logic ---
+let currentQuizQuestions = [];
+let quizQuestionOrder = [];
+let currentQuizIndex = 0;
+
+function startQuiz() {
+    const quizQuestionsContainer = document.getElementById('quiz-questions');
+    const resultDiv = document.getElementById('quiz-score');
+    const submitBtn = document.getElementById('submit-quiz-btn');
+    const restartBtn = document.getElementById('restart-quiz-btn');
+    
+    if(!quizQuestionsContainer) return;
+    
+    // Reset states
+    resultDiv.style.display = 'none';
+    resultDiv.textContent = '';
+    submitBtn.style.display = 'inline-block';
+    restartBtn.style.display = 'none';
+    quizQuestionsContainer.innerHTML = '';
+    
+    // Check if questions are loaded globally (via app.py injection)
+    let bank = window.questionBank;
+    if (!bank || bank.length === 0) {
+        quizQuestionsContainer.innerHTML = '<p class="placeholder-text">Loading questions...</p>';
+        fetch('questions.json')
+            .then(res => res.json())
+            .then(data => {
+                window.questionBank = data;
+                startQuiz(); // re-run
+            })
+            .catch(err => {
+                quizQuestionsContainer.innerHTML = '<p class="placeholder-text">Error: Question bank not loaded locally.</p>';
+                console.error(err);
+            });
+        return;
+    }
+    
+    // Shuffle completely once, then pick 5 progressively without overlap
+    if (quizQuestionOrder.length === 0 || currentQuizIndex + 5 > bank.length) {
+        let shuffledBank = [...bank];
+        for (let i = shuffledBank.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffledBank[i], shuffledBank[j]] = [shuffledBank[j], shuffledBank[i]];
+        }
+        quizQuestionOrder = shuffledBank;
+        currentQuizIndex = 0;
+    }
+    
+    currentQuizQuestions = quizQuestionOrder.slice(currentQuizIndex, currentQuizIndex + 5);
+    currentQuizIndex += 5;
+    
+    // Render
+    currentQuizQuestions.forEach((q, index) => {
+        const cardDiv = document.createElement('div');
+        cardDiv.className = 'quiz-question-card';
+        cardDiv.id = `question-card-${index}`;
+        
+        let html = `<div class="quiz-question-text">${index + 1}. ${escapeHTML(q.question)}</div>`;
+        html += `<div class="quiz-options">`;
+        
+        q.options.forEach((opt, optIndex) => {
+            html += `
+                <label class="quiz-option-label" id="label-${index}-${optIndex}">
+                    <input type="radio" name="q${index}" value="${escapeHTML(opt)}">
+                    ${escapeHTML(opt)}
+                </label>
+            `;
+        });
+        html += `</div>`;
+        cardDiv.innerHTML = html;
+        quizQuestionsContainer.appendChild(cardDiv);
+    });
+}
+
+function submitQuiz() {
+    let score = 0;
+    let answered = 0;
+    
+    currentQuizQuestions.forEach((q, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        if(selected) answered++;
+    });
+    
+    if(answered < currentQuizQuestions.length) {
+        alert("Please answer all 5 questions before submitting!");
+        return;
+    }
+    
+    // Evaluate
+    currentQuizQuestions.forEach((q, index) => {
+        const selected = document.querySelector(`input[name="q${index}"]:checked`);
+        const cardDiv = document.getElementById(`question-card-${index}`);
+        const correctAnswer = q.answer;
+        
+        // Find correct option index visually
+        q.options.forEach((opt, optIndex) => {
+            const label = document.getElementById(`label-${index}-${optIndex}`);
+            const isSelected = selected && selected.value === opt;
+            const isCorrect = opt === correctAnswer;
+            
+            if(isCorrect) {
+                label.classList.add('correct');
+            } else if (isSelected && !isCorrect) {
+                label.classList.add('incorrect');
+            }
+            
+            // Disable inputs
+            const input = label.querySelector('input');
+            if(input) input.disabled = true;
+        });
+        
+        if(selected && selected.value === correctAnswer) {
+            score++;
+        }
+    });
+    
+    // Display result
+    const resultDiv = document.getElementById('quiz-score');
+    resultDiv.style.display = 'block';
+    
+    if(score === 5) {
+        resultDiv.style.color = 'var(--accent-tertiary)';
+        resultDiv.textContent = `🎉 Flawless! You scored ${score} / 5!`;
+    } else if (score >= 3) {
+        resultDiv.style.color = 'var(--accent-primary)';
+        resultDiv.textContent = `👍 Good job! You scored ${score} / 5.`;
+    } else {
+        resultDiv.style.color = 'var(--accent-danger)';
+        resultDiv.textContent = `📚 Keep practicing! You scored ${score} / 5.`;
+    }
+    
+    document.getElementById('submit-quiz-btn').style.display = 'none';
+    document.getElementById('restart-quiz-btn').style.display = 'inline-block';
+    
+    // Scroll to top of quiz to see score
+    document.getElementById('quiz-container').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function escapeHTML(str) {
+    if(!str) return '';
+    return str.toString()
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+}

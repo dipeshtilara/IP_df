@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,6 +39,10 @@
                 <button class="nav-item" data-topic="iteration">
                     <span class="icon">🔄</span> Iteration
                 </button>
+                <div style="height: 1rem;"></div> <!-- Spacer -->
+                <button class="nav-item quiz-nav-btn" data-topic="quiz" style="border: 1px solid var(--accent-secondary);">
+                    <span class="icon">🧠</span> Practice Quiz
+                </button>
             </nav>
             <div class="theme-toggle-container">
                 <button id="theme-toggle" class="theme-toggle" aria-label="Toggle Dark Mode">
@@ -56,7 +61,7 @@
 
             <div class="workspace">
                 <!-- Code / Controls Panel -->
-                <div class="controls-panel glass-panel">
+                <div class="controls-panel glass-panel" id="main-controls">
                     <div class="panel-header">
                         <h3>Interactive Console</h3>
                     </div>
@@ -70,7 +75,7 @@
                 </div>
 
                 <!-- Visualization Stage -->
-                <div class="visualization-stage glass-panel">
+                <div class="visualization-stage glass-panel" id="main-visualization">
                     <div class="stage-header">
                         <div style="display: flex; align-items: center; gap: 20px;">
                             <h3>Output Visualization</h3>
@@ -116,6 +121,22 @@
                                 <div class="placeholder-text">Click an action to visualize the DataFrame.</div>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- Quiz Container (Hidden by Default) -->
+                <div class="quiz-container glass-panel" id="quiz-container" style="display: none; width: 100%; flex-direction: column; overflow-y: auto; padding: 2rem;">
+                    <div class="quiz-header" style="text-align: center; margin-bottom: 2rem;">
+                        <h2 style="font-size: 2rem; color: var(--accent-secondary); margin-bottom: 0.5rem;">Practice Quiz Time!</h2>
+                        <p style="color: var(--text-muted);">Answer 5 random questions to test your knowledge.</p>
+                        <div class="quiz-score" id="quiz-score" style="display: none; margin-top: 1rem; font-size: 1.25rem; font-weight: bold; background: var(--bg-glass-hover); padding: 1rem; border-radius: 1rem;"></div>
+                    </div>
+                    <div class="quiz-questions" id="quiz-questions">
+                        <!-- Questions injected dynamically -->
+                    </div>
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button class="action-btn primary" id="submit-quiz-btn" onclick="submitQuiz()" style="font-size: 1.1rem; padding: 0.8rem 2rem; border-radius: 2rem;">Submit Answers</button>
+                        <button class="action-btn warning" id="restart-quiz-btn" onclick="startQuiz()" style="display: none; font-size: 1.1rem; padding: 0.8rem 2rem; border-radius: 2rem; margin: 0 auto;">Try Another 5 Questions</button>
                     </div>
                 </div>
             </div>

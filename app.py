@@ -39,6 +39,7 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 css_path = os.path.join(current_dir, "styles.css")
 js_path = os.path.join(current_dir, "script.js")
 html_path = os.path.join(current_dir, "index.html")
+json_path = os.path.join(current_dir, "questions.json")
 
 try:
     # Read the content of the frontend files
@@ -51,7 +52,13 @@ try:
     with open(html_path, "r", encoding="utf-8") as f:
         html_content = f.read()
 
+    import json
     import re
+    if os.path.exists(json_path):
+        with open(json_path, 'r', encoding='utf-8') as f:
+            json_data = json.load(f)
+        js_content = f"window.questionBank = {json.dumps(json_data)};\n" + js_content
+
     # Inject the CSS and JS directly into the HTML string
     # This ensures that the iframe does not need to resolve local relative file paths
     html_content = re.sub(
@@ -64,7 +71,7 @@ try:
         lambda m: f"<script>\n{js_content}\n</script>",
         html_content
     )
-
+        
     # Render the custom HTML in Streamlit
     # Height is set relatively large to accommodate the entire SPA
     components.html(html_content, height=900, scrolling=True)
